@@ -92,10 +92,17 @@ def map_dish_slug(slug: str, audit: Optional[DishMappingAudit] = None) -> Option
     return None
 
 
-def build_dish_taxonomy(item_urls: List[str]) -> Dict[str, List[Dict[str, List[str]]]]:
+def build_dish_taxonomy(
+    item_urls: List[str],
+    *,
+    min_count: int = 5,
+    top_n: int = 15,
+) -> Dict[str, object]:
     """Build dish taxonomy from item URLs."""
 
-    categories: Dict[str, List[str]] = defaultdict(list)
+    audit = DishMappingAudit()
+    counts: Dict[str, int] = defaultdict(int)
+
     for url in item_urls:
         path = urlparse(url).path
         parts = [part for part in path.split("/") if part]
@@ -103,20 +110,29 @@ def build_dish_taxonomy(item_urls: List[str]) -> Dict[str, List[Dict[str, List[s
             items_index = parts.index("items")
         except ValueError:
             continue
-        category = parts[items_index + 1] if len(parts) > items_index + 1 else "uncategorized"
-        item = parts[items_index + 2] if len(parts) > items_index + 2 else "unknown"
-        categories[category].append(item)
+        item_parts = parts[items_index + 1 :]
+        if not item_parts:
+            continue
+        slug = item_parts[-1]
+        category = map_dish_slug(slug, audit=audit)
+        if category:
+            counts[category] += 1
 
-    category_list = []
-    for name in categories:
-        category_list.append(
-            {
-                "name": name,
-                "items": sorted(set(categories[name])),
-            }
-        )
-    category_list.sort(
-        key=lambda category: (-len(category["items"]), category["name"]),
-    )
+    sorted_categories = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    strict_categories = [
+        {"category": name, "count": count}
+        for name, count in sorted_categories
+        if count >= min_count
+    ][:top_n]
 
-    return {"categories": category_list}
+    return {
+        "strategy": {"mode": "strict", "min_count": min_count, "top_n": top_n},
+        "audit": {
+            "mapped": audit.mapped,
+            "unmapped": audit.unmapped,
+            "top_unknown_tokens": [
+                {"token": token, "count": count} for token, count in audit.top_unknown_tokens()
+            ],
+        },
+        "categories": strict_categories,
+    }

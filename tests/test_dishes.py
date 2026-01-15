@@ -7,7 +7,12 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
 from seo_engine.select.dish_lexicon import CATEGORY_MAP  # noqa: E402
-from seo_engine.select.dishes import DishMappingAudit, map_dish_slug, normalize_dish_slug  # noqa: E402
+from seo_engine.select.dishes import (  # noqa: E402
+    DishMappingAudit,
+    build_dish_taxonomy,
+    map_dish_slug,
+    normalize_dish_slug,
+)
 
 
 def test_award_winning_baby_back_ribs_maps_to_ribs() -> None:
@@ -37,3 +42,19 @@ def test_short_or_non_numeric_suffix_is_not_stripped() -> None:
     assert normalize_dish_slug("pepperoni-pizza") == "pepperoni-pizza"
     assert normalize_dish_slug("taco-stand") == "taco-stand"
     assert normalize_dish_slug("crispy-tacos-123") == "crispy-tacos-123"
+
+
+def test_build_dish_taxonomy_counts_ribs_in_strict_mode() -> None:
+    item_urls = [
+        f"https://example.com/items/award-winning-baby-back-ribs-{index:06d}"
+        for index in range(5)
+    ]
+
+    taxonomy = build_dish_taxonomy(item_urls)
+
+    assert taxonomy["strategy"]["min_count"] == 5
+    assert taxonomy["strategy"]["top_n"] == 15
+    assert taxonomy["categories"] == [{"category": "ribs", "count": 5}]
+    assert "award-winning-baby-back-ribs" not in [
+        entry["category"] for entry in taxonomy["categories"]
+    ]

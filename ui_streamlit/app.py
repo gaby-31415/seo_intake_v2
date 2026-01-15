@@ -154,9 +154,13 @@ if artifacts_dir:
     with st.expander("Dish Categories", expanded=False):
         dish_categories = dish_taxonomy_data.get("dishes", {}).get("categories", [])
         if dish_categories:
-            st.json(dish_categories)
+            lines = [
+                f"- {category.get('category', '')} ({category.get('count', 0)})"
+                for category in dish_categories
+            ]
+            st.markdown("\n".join(lines))
         else:
-            st.info("No dish categories found.")
+            st.info("No dish categories mapped (strict mode).")
 
     with st.expander("Dish Unknown Tokens (tuning)", expanded=False):
         unknown_tokens = _normalize_unknown_tokens(dish_taxonomy_data)
