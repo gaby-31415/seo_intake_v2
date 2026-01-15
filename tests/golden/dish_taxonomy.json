@@ -1,19 +1,32 @@
 {
   "dishes": {
-    "categories": [
-      {
-        "items": [
-          "margherita",
-          "pepperoni"
-        ],
-        "name": "pizzas"
-      },
-      {
-        "items": [
-          "greek"
-        ],
-        "name": "salads"
-      }
-    ]
+    "audit": {
+      "mapped": [],
+      "top_unknown_tokens": [
+        {
+          "count": 1,
+          "token": "greek"
+        },
+        {
+          "count": 1,
+          "token": "margherita"
+        },
+        {
+          "count": 1,
+          "token": "pepperoni"
+        }
+      ],
+      "unmapped": [
+        "pepperoni",
+        "margherita",
+        "greek"
+      ]
+    },
+    "categories": [],
+    "strategy": {
+      "min_count": 5,
+      "mode": "strict",
+      "top_n": 15
+    }
   }
 }

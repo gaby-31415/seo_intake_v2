@@ -49,8 +49,17 @@ def render_clipboard(
     for page in core_pages:
         lines.append(f"- {page.get('url', '')}")
     lines.append("Dish Categories:")
-    for category in dish_categories:
-        lines.append(f"- {category.get('name', '')}")
+    if dish_categories:
+        for category in dish_categories:
+            label = category.get("category", "")
+            count = category.get("count")
+            if label:
+                if count is None:
+                    lines.append(f"- {label}")
+                else:
+                    lines.append(f"- {label} ({count})")
+    else:
+        lines.append("No dish categories mapped (strict mode)")
     lines.append("Ahrefs Snapshot:")
     lines.append(str(ahrefs_snapshot))
     if include_unknown_tokens:
