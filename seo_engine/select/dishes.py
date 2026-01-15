@@ -58,12 +58,15 @@ def build_dish_taxonomy(item_urls: List[str]) -> Dict[str, List[Dict[str, List[s
         categories[category].append(item)
 
     category_list = []
-    for name in sorted(categories):
+    for name in categories:
         category_list.append(
             {
                 "name": name,
                 "items": sorted(set(categories[name])),
             }
         )
+    category_list.sort(
+        key=lambda category: (-len(category["items"]), category["name"]),
+    )
 
     return {"categories": category_list}

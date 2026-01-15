@@ -3,16 +3,16 @@
     "categories": [
       {
         "items": [
-          "greek"
-        ],
-        "name": "salads"
-      },
-      {
-        "items": [
           "margherita",
           "pepperoni"
         ],
         "name": "pizzas"
+      },
+      {
+        "items": [
+          "greek"
+        ],
+        "name": "salads"
       }
     ]
   }
