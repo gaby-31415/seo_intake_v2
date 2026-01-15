@@ -6,11 +6,13 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
+from seo_engine.select.dish_lexicon import CATEGORY_MAP  # noqa: E402
 from seo_engine.select.dishes import DishMappingAudit, map_dish_slug, normalize_dish_slug  # noqa: E402
 
 
 def test_award_winning_baby_back_ribs_maps_to_ribs() -> None:
     assert map_dish_slug("award-winning-baby-back-ribs") == "ribs"
+    assert "ribs" in CATEGORY_MAP
 
 
 def test_unmapped_slug_contributes_to_audit_metrics() -> None:
