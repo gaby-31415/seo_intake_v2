@@ -8,7 +8,10 @@ import re
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
-_TRAILING_SUFFIX_RE = re.compile(r"-([0-9]+|[0-9a-f]{6,})$", re.IGNORECASE)
+_TRAILING_SUFFIX_RE = re.compile(
+    r"-(?:[0-9]{6,}|[0-9a-f]{6,}|(?=[a-z0-9]*[0-9])[a-z0-9]{8,})$",
+    re.IGNORECASE,
+)
 
 
 @dataclass
