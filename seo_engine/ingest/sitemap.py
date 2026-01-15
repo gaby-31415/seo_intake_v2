@@ -4,17 +4,35 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from typing import List, Tuple
+from urllib.parse import urlparse
 
 
-def parse_sitemap(sitemap_xml: bytes) -> List[str]:
-    """Parse sitemap XML bytes into a list of URLs."""
+def _is_malformed_url(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return True
+    if not parsed.netloc:
+        return True
+    path = parsed.path or ""
+    if path.startswith("/http") or "/https/" in path:
+        return True
+    return False
+
+
+def parse_sitemap(sitemap_xml: bytes) -> Tuple[List[str], List[str]]:
+    """Parse sitemap XML bytes into a list of URLs and excluded URLs."""
 
     root = ET.fromstring(sitemap_xml)
     urls: List[str] = []
+    excluded: List[str] = []
     for url in root.findall(".//{*}url/{*}loc"):
         if url.text:
-            urls.append(url.text.strip())
-    return urls
+            loc = url.text.strip()
+            if _is_malformed_url(loc):
+                excluded.append(loc)
+            else:
+                urls.append(loc)
+    return urls, excluded
 
 
 def split_item_urls(urls: List[str]) -> Tuple[List[str], List[str]]:
