@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
+from pathlib import Path
 from typing import Any, Dict
 
 import streamlit as st
 
-from pipeline import run_pipeline
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from seo_engine.pipeline import run_pipeline
 from seo_engine.render.clipboard import render_clipboard
 
 
@@ -24,6 +30,11 @@ sitemap_file = st.file_uploader(
 html_files = st.file_uploader(
     "HTML files",
     type=["html", "htm"],
+    accept_multiple_files=True,
+)
+csv_files = st.file_uploader(
+    "Optional CSV files",
+    type=["csv"],
     accept_multiple_files=True,
 )
 
@@ -63,6 +74,17 @@ def _normalize_unknown_tokens(dish_taxonomy: Dict[str, Any]) -> list[Dict[str, A
     return normalized
 
 
+def _save_uploaded_files(uploaded_files: list[Any], target_dir: str) -> None:
+    if not uploaded_files:
+        return
+    os.makedirs(target_dir, exist_ok=True)
+    for uploaded in uploaded_files:
+        safe_name = os.path.basename(uploaded.name)
+        destination = os.path.join(target_dir, safe_name)
+        with open(destination, "wb") as handle:
+            handle.write(uploaded.getvalue())
+
+
 if run_clicked:
     if sitemap_file is None:
         st.warning("Please upload a sitemap XML file before running.")
@@ -71,12 +93,14 @@ if run_clicked:
         html_bytes_list = [uploaded.getvalue() for uploaded in html_files or []]
         with st.spinner("Running pipeline..."):
             out_dir = tempfile.mkdtemp(prefix="seo-intake-")
+            _save_uploaded_files(csv_files or [], os.path.join(out_dir, "inputs"))
             artifacts_dir = run_pipeline(sitemap_bytes, html_bytes_list, out_dir)
         st.session_state["artifacts_dir"] = artifacts_dir
 
 artifacts_dir = st.session_state.get("artifacts_dir")
 
 if artifacts_dir:
+    st.info(f"Artifacts saved to: {artifacts_dir}")
     locations_data = _read_json(os.path.join(artifacts_dir, "locations.json"))
     core_pages_data = _read_json(os.path.join(artifacts_dir, "core_pages.json"))
     dish_taxonomy_data = _read_json(os.path.join(artifacts_dir, "dish_taxonomy.json"))
@@ -102,9 +126,10 @@ if artifacts_dir:
 
     st.subheader("Clipboard Package")
     st.text_area(
-        "Clipboard text",
+        "Copy-friendly text",
         value=clipboard_text,
         height=200,
+        help="Copy this text into the clipboard target.",
     )
     st.download_button(
         "Download clipboard_package.txt",
