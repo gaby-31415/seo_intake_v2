@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 import sys
@@ -10,6 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
 from pipeline import run_pipeline  # noqa: E402
+from seo_engine.utils.json_stable import json_dump_stable, json_load  # noqa: E402
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 GOLDEN_DIR = Path(__file__).parent / "golden"
@@ -19,24 +19,17 @@ def _normalize_json(data: Any) -> Any:
     if isinstance(data, dict):
         return {key: _normalize_json(data[key]) for key in sorted(data)}
     if isinstance(data, list):
-        normalized = [_normalize_json(item) for item in data]
-        try:
-            return sorted(normalized, key=lambda item: json.dumps(item, sort_keys=True))
-        except TypeError:
-            return normalized
+        return [_normalize_json(item) for item in data]
     return data
 
 
 def _load_json(path: Path) -> Any:
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+    return json_load(str(path))
 
 
 def _write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
-        handle.write("\n")
+    json_dump_stable(payload, str(path))
 
 
 def test_pipeline_golden(tmp_path: Path) -> None:

@@ -1,6 +1,10 @@
 {
   "urls": [
     {
+      "label": "Other",
+      "url": "https://example.com/"
+    },
+    {
       "label": "About",
       "url": "https://example.com/about"
     },
@@ -11,10 +15,6 @@
     {
       "label": "Menu",
       "url": "https://example.com/menu"
-    },
-    {
-      "label": "Other",
-      "url": "https://example.com/"
     },
     {
       "label": "Private Events",

@@ -3,8 +3,8 @@
     {
       "address": [
         "123 Main St.",
-        "Metropolis, NY 10001",
-        "Suite 100"
+        "Suite 100",
+        "Metropolis, NY 10001"
       ],
       "email": "downtown@example.com",
       "name": "Downtown",
