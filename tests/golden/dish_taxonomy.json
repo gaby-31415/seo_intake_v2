@@ -1,0 +1,19 @@
+{
+  "dishes": {
+    "categories": [
+      {
+        "items": [
+          "greek"
+        ],
+        "name": "salads"
+      },
+      {
+        "items": [
+          "margherita",
+          "pepperoni"
+        ],
+        "name": "pizzas"
+      }
+    ]
+  }
+}

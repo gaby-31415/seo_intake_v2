@@ -1,0 +1,24 @@
+{
+  "urls": [
+    {
+      "label": "About",
+      "url": "https://example.com/about"
+    },
+    {
+      "label": "Locations",
+      "url": "https://example.com/locations"
+    },
+    {
+      "label": "Menu",
+      "url": "https://example.com/menu"
+    },
+    {
+      "label": "Other",
+      "url": "https://example.com/"
+    },
+    {
+      "label": "Private Events",
+      "url": "https://example.com/private-events"
+    }
+  ]
+}

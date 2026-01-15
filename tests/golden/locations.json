@@ -1,0 +1,23 @@
+{
+  "locations": [
+    {
+      "address": [
+        "123 Main St.",
+        "Metropolis, NY 10001",
+        "Suite 100"
+      ],
+      "email": "downtown@example.com",
+      "name": "Downtown",
+      "phone": "(123) 456-7890"
+    },
+    {
+      "address": [
+        "456 Elm St.",
+        "Metropolis, NY 10002"
+      ],
+      "email": "uptown@example.com",
+      "name": "Uptown",
+      "phone": "(109) 876-5432"
+    }
+  ]
+}
