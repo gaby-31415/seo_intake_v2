@@ -84,6 +84,8 @@ def run_pipeline(sitemap_xml: bytes, html_files: List[bytes], out_dir: str) -> s
         core_pages=core_pages,
         dish_categories=dish_taxonomy.get("categories", []),
         ahrefs_snapshot=ahrefs_schema.overview,
+        dish_taxonomy=dish_taxonomy,
+        include_unknown_tokens=False,
     )
     clipboard_path = os.path.join(artifacts_dir, "clipboard_package.txt")
     with open(clipboard_path, "w", encoding="utf-8") as handle:
