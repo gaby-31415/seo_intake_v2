@@ -60,8 +60,35 @@ def render_clipboard(
                     lines.append(f"- {label} ({count})")
     else:
         lines.append("No dish categories mapped (strict mode)")
-    lines.append("Ahrefs Snapshot:")
-    lines.append(str(ahrefs_snapshot))
+    if not ahrefs_snapshot:
+        lines.append("Ahrefs Snapshot: Not provided")
+    else:
+        lines.append("Ahrefs Snapshot:")
+        traffic_trend = ahrefs_snapshot.get("traffic_trend", {})
+        direction = traffic_trend.get("direction") or "Unknown"
+        confidence = traffic_trend.get("confidence") or "Unknown"
+        lines.append(f"- Trend: {direction} (confidence: {confidence})")
+
+        distribution = ahrefs_snapshot.get("position_distribution", {})
+        latest_counts = distribution.get("latest_counts", {})
+        if latest_counts:
+            lines.append("- Latest bucket counts:")
+            for bucket, count in latest_counts.items():
+                lines.append(f"  - {bucket}: {count}")
+        else:
+            lines.append("- Latest bucket counts: None")
+
+        top_keywords = ahrefs_snapshot.get("top_keywords", [])
+        if top_keywords:
+            lines.append("- Top keywords:")
+            for entry in top_keywords:
+                keyword = entry.get("keyword") or ""
+                volume = entry.get("volume")
+                position = entry.get("position")
+                url = entry.get("url") or ""
+                lines.append(f"  - {keyword} — {volume} — {position} — {url}")
+        else:
+            lines.append("- Top keywords: None")
     if include_unknown_tokens:
         unknown_tokens = _collect_unknown_tokens(dish_taxonomy)
         if unknown_tokens:
