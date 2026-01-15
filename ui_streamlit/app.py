@@ -8,6 +8,7 @@ from typing import Any, Dict
 import streamlit as st
 
 from pipeline import run_pipeline
+from seo_engine.render.clipboard import render_clipboard
 
 
 st.set_page_config(page_title="SEO Intake", layout="centered")
@@ -39,6 +40,29 @@ def _read_json(path: str) -> Dict[str, Any]:
         return {}
 
 
+def _normalize_unknown_tokens(dish_taxonomy: Dict[str, Any]) -> list[Dict[str, Any]]:
+    tokens_raw = dish_taxonomy.get("dishes", {}).get("audit", {}).get("top_unknown_tokens", [])
+    normalized: list[Dict[str, Any]] = []
+    if isinstance(tokens_raw, dict):
+        for token, count in tokens_raw.items():
+            normalized.append({"token": str(token), "count": count})
+        return normalized
+    if isinstance(tokens_raw, list):
+        for entry in tokens_raw:
+            if isinstance(entry, dict):
+                token = entry.get("token")
+                count = entry.get("count")
+                if token:
+                    normalized.append({"token": str(token), "count": count})
+            elif isinstance(entry, (list, tuple)) and len(entry) >= 2:
+                token, count = entry[0], entry[1]
+                if token:
+                    normalized.append({"token": str(token), "count": count})
+            elif isinstance(entry, str):
+                normalized.append({"token": entry, "count": None})
+    return normalized
+
+
 if run_clicked:
     if sitemap_file is None:
         st.warning("Please upload a sitemap XML file before running.")
@@ -53,11 +77,28 @@ if run_clicked:
 artifacts_dir = st.session_state.get("artifacts_dir")
 
 if artifacts_dir:
-    clipboard_path = os.path.join(artifacts_dir, "clipboard_package.txt")
+    locations_data = _read_json(os.path.join(artifacts_dir, "locations.json"))
+    core_pages_data = _read_json(os.path.join(artifacts_dir, "core_pages.json"))
+    dish_taxonomy_data = _read_json(os.path.join(artifacts_dir, "dish_taxonomy.json"))
+    ahrefs_data = _read_json(os.path.join(artifacts_dir, "ahrefs_summary.json"))
+
+    show_unknown_tokens = st.checkbox("Show dish unknown tokens (tuning)", value=False)
+
     clipboard_text = ""
-    if os.path.exists(clipboard_path):
-        with open(clipboard_path, "r", encoding="utf-8") as handle:
-            clipboard_text = handle.read()
+    if show_unknown_tokens:
+        clipboard_text = render_clipboard(
+            locations=locations_data.get("locations", []),
+            core_pages=core_pages_data.get("urls", []),
+            dish_categories=dish_taxonomy_data.get("dishes", {}).get("categories", []),
+            ahrefs_snapshot=ahrefs_data.get("overview", {}),
+            dish_taxonomy=dish_taxonomy_data.get("dishes", {}),
+            include_unknown_tokens=True,
+        )
+    else:
+        clipboard_path = os.path.join(artifacts_dir, "clipboard_package.txt")
+        if os.path.exists(clipboard_path):
+            with open(clipboard_path, "r", encoding="utf-8") as handle:
+                clipboard_text = handle.read()
 
     st.subheader("Clipboard Package")
     st.text_area(
@@ -70,10 +111,6 @@ if artifacts_dir:
         data=clipboard_text,
         file_name="clipboard_package.txt",
     )
-
-    locations_data = _read_json(os.path.join(artifacts_dir, "locations.json"))
-    core_pages_data = _read_json(os.path.join(artifacts_dir, "core_pages.json"))
-    dish_taxonomy_data = _read_json(os.path.join(artifacts_dir, "dish_taxonomy.json"))
 
     with st.expander("Locations", expanded=False):
         locations = locations_data.get("locations", [])
@@ -95,3 +132,10 @@ if artifacts_dir:
             st.json(dish_categories)
         else:
             st.info("No dish categories found.")
+
+    with st.expander("Dish Unknown Tokens (tuning)", expanded=False):
+        unknown_tokens = _normalize_unknown_tokens(dish_taxonomy_data)
+        if unknown_tokens:
+            st.json(unknown_tokens)
+        else:
+            st.info("No unknown tokens found.")
