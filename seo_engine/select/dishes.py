@@ -3,8 +3,43 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, List
+from dataclasses import dataclass, field
+import re
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
+
+_TRAILING_SUFFIX_RE = re.compile(r"-([0-9]+|[0-9a-f]{6,})$", re.IGNORECASE)
+
+
+@dataclass
+class DishMappingAudit:
+    """Audit metrics for dish mapping."""
+
+    unmapped: List[str] = field(default_factory=list)
+
+    def record_unmapped(self, slug: str) -> None:
+        """Record an unmapped dish slug."""
+
+        self.unmapped.append(slug)
+
+
+def normalize_dish_slug(slug: str) -> str:
+    """Normalize dish slugs by stripping trailing numeric/hex suffixes."""
+
+    normalized = slug.strip().lower()
+    return _TRAILING_SUFFIX_RE.sub("", normalized)
+
+
+def map_dish_slug(slug: str, audit: Optional[DishMappingAudit] = None) -> Optional[str]:
+    """Map a dish slug to a taxonomy label."""
+
+    normalized = normalize_dish_slug(slug)
+    parts = normalized.split("-")
+    if "ribs" in parts:
+        return "ribs"
+    if audit is not None:
+        audit.record_unmapped(normalized)
+    return None
 
 
 def build_dish_taxonomy(item_urls: List[str]) -> Dict[str, List[Dict[str, List[str]]]]:
