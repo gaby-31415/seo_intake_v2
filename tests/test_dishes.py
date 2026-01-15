@@ -23,5 +23,15 @@ def test_unmapped_slug_contributes_to_audit_metrics() -> None:
 
 
 def test_trailing_numeric_hex_suffix_is_stripped() -> None:
-    assert normalize_dish_slug("crispy-tacos-123") == "crispy-tacos"
+    assert normalize_dish_slug("crispy-tacos-123456") == "crispy-tacos"
     assert normalize_dish_slug("crispy-tacos-047843dd") == "crispy-tacos"
+
+
+def test_trailing_alphanumeric_suffix_with_digit_is_stripped() -> None:
+    assert normalize_dish_slug("foo-bar-ab12cd34") == "foo-bar"
+
+
+def test_short_or_non_numeric_suffix_is_not_stripped() -> None:
+    assert normalize_dish_slug("pepperoni-pizza") == "pepperoni-pizza"
+    assert normalize_dish_slug("taco-stand") == "taco-stand"
+    assert normalize_dish_slug("crispy-tacos-123") == "crispy-tacos-123"
