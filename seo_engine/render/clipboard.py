@@ -44,7 +44,7 @@ def render_clipboard(
     lines = ["SEO Intake Summary"]
     lines.append("Locations:")
     for location in locations:
-        lines.append(f"- {location.get('name', '')}")
+        lines.append(f"- {location.get('location_name') or location.get('name', '')}")
     lines.append("Core Pages:")
     for page in core_pages:
         lines.append(f"- {page.get('url', '')}")
