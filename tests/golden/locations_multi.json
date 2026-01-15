@@ -15,6 +15,21 @@
       "phone": "(123) 456-7890",
       "postal": "10001",
       "region": "NY"
+    },
+    {
+      "address": [
+        "456 Elm St.",
+        "Metropolis, NY 10002-1234"
+      ],
+      "city": "Metropolis",
+      "city_state_zip": "Metropolis, NY 10002-1234",
+      "confidence": "high",
+      "email": "uptown@example.com",
+      "full_address": "456 Elm St., Metropolis, NY 10002-1234",
+      "name": "Uptown",
+      "phone": "(109) 876-5432",
+      "postal": "10002-1234",
+      "region": "NY"
     }
   ]
 }

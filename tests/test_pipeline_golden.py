@@ -32,11 +32,21 @@ def _write_json(path: Path, payload: Any) -> None:
     json_dump_stable(payload, str(path))
 
 
-def test_pipeline_golden(tmp_path: Path) -> None:
+def _run_pipeline(tmp_path: Path, html_fixture: str) -> Path:
     sitemap_xml = (FIXTURES_DIR / "sample_sitemap.xml").read_bytes()
-    html_files = [(FIXTURES_DIR / "sample_location.html").read_bytes()]
+    html_files = [(FIXTURES_DIR / html_fixture).read_bytes()]
+    return Path(run_pipeline(sitemap_xml, html_files, str(tmp_path)))
 
-    artifacts_dir = Path(run_pipeline(sitemap_xml, html_files, str(tmp_path)))
+
+def _assert_golden(payload: Any, golden_name: str) -> None:
+    golden_path = GOLDEN_DIR / golden_name
+    assert golden_path.exists(), f"Missing golden file: {golden_path}"
+    expected = _normalize_json(_load_json(golden_path))
+    assert payload == expected
+
+
+def test_pipeline_golden(tmp_path: Path) -> None:
+    artifacts_dir = _run_pipeline(tmp_path, "sample_location.html")
 
     outputs = {
         "locations.json": _normalize_json(_load_json(artifacts_dir / "locations.json")),
@@ -50,7 +60,15 @@ def test_pipeline_golden(tmp_path: Path) -> None:
         return
 
     for filename, payload in outputs.items():
-        golden_path = GOLDEN_DIR / filename
-        assert golden_path.exists(), f"Missing golden file: {golden_path}"
-        expected = _normalize_json(_load_json(golden_path))
-        assert payload == expected
+        _assert_golden(payload, filename)
+
+
+def test_pipeline_golden_multi_locations(tmp_path: Path) -> None:
+    artifacts_dir = _run_pipeline(tmp_path, "sample_locations_multi.html")
+    payload = _normalize_json(_load_json(artifacts_dir / "locations.json"))
+
+    if os.getenv("REGENERATE_GOLDENS") == "1":
+        _write_json(GOLDEN_DIR / "locations_multi.json", payload)
+        return
+
+    _assert_golden(payload, "locations_multi.json")
