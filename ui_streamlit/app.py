@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import os
 import sys
@@ -85,16 +86,59 @@ def _save_uploaded_files(uploaded_files: list[Any], target_dir: str) -> None:
             handle.write(uploaded.getvalue())
 
 
+def _read_csv_header(uploaded: Any) -> list[str]:
+    if uploaded is None:
+        return []
+    raw_bytes = uploaded.getvalue()
+    if not raw_bytes:
+        return []
+    for encoding in ("utf-8-sig", "utf-16"):
+        try:
+            text = raw_bytes.decode(encoding)
+        except UnicodeError:
+            continue
+        first_line = text.splitlines()[0] if text.splitlines() else ""
+        if not first_line:
+            continue
+        delimiter = "\t" if "\t" in first_line else ","
+        reader = csv.reader([first_line], delimiter=delimiter)
+        return [cell.strip() for cell in next(reader, []) if cell.strip()]
+    return []
+
+
+def _identify_ahrefs_csvs(uploaded_files: list[Any]) -> tuple[bytes | None, bytes | None]:
+    keyword_csv = None
+    performance_csv = None
+    for uploaded in uploaded_files or []:
+        header = _read_csv_header(uploaded)
+        if "Keyword" in header and keyword_csv is None:
+            keyword_csv = uploaded.getvalue()
+        elif "Metric" in header and performance_csv is None:
+            performance_csv = uploaded.getvalue()
+    return keyword_csv, performance_csv
+
+
 if run_clicked:
     if sitemap_file is None:
         st.warning("Please upload a sitemap XML file before running.")
     else:
         sitemap_bytes = sitemap_file.getvalue()
         html_bytes_list = [uploaded.getvalue() for uploaded in html_files or []]
+        limited_csv_files = list(csv_files or [])
+        if len(limited_csv_files) > 2:
+            st.warning("Only the first two CSV files will be used.")
+            limited_csv_files = limited_csv_files[:2]
+        keyword_csv, performance_csv = _identify_ahrefs_csvs(limited_csv_files)
         with st.spinner("Running pipeline..."):
             out_dir = tempfile.mkdtemp(prefix="seo-intake-")
-            _save_uploaded_files(csv_files or [], os.path.join(out_dir, "inputs"))
-            artifacts_dir = run_pipeline(sitemap_bytes, html_bytes_list, out_dir)
+            _save_uploaded_files(limited_csv_files, os.path.join(out_dir, "inputs"))
+            artifacts_dir = run_pipeline(
+                sitemap_bytes,
+                html_bytes_list,
+                out_dir,
+                keyword_csv=keyword_csv,
+                performance_csv=performance_csv,
+            )
         st.session_state["artifacts_dir"] = artifacts_dir
 
 artifacts_dir = st.session_state.get("artifacts_dir")

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from seo_engine.extract.locations import extract_locations
+from seo_engine.ingest.ahrefs import build_ahrefs_overview
 from seo_engine.ingest.sitemap import parse_sitemap, split_item_urls
 from seo_engine.render.clipboard import render_clipboard
 from seo_engine.schemas import AhrefsSummary, CorePages, DishTaxonomy, Locations, SiteFacts
@@ -44,7 +45,13 @@ def _ensure_artifacts_dir(out_dir: str) -> str:
     return artifacts_dir
 
 
-def run_pipeline(sitemap_xml: bytes, html_files: List[bytes], out_dir: str) -> str:
+def run_pipeline(
+    sitemap_xml: bytes,
+    html_files: List[bytes],
+    out_dir: str,
+    keyword_csv: Optional[bytes] = None,
+    performance_csv: Optional[bytes] = None,
+) -> str:
     """Run the SEO intake pipeline and return the artifacts directory."""
 
     urls, excluded_urls = parse_sitemap(sitemap_xml)
@@ -64,7 +71,8 @@ def run_pipeline(sitemap_xml: bytes, html_files: List[bytes], out_dir: str) -> s
     )
     locations_schema = Locations(locations=locations)
     dish_schema = DishTaxonomy(dishes=dish_taxonomy)
-    ahrefs_schema = AhrefsSummary()
+    ahrefs_overview = build_ahrefs_overview(keyword_csv, performance_csv)
+    ahrefs_schema = AhrefsSummary(overview=ahrefs_overview)
 
     json_dump_stable(site_facts.to_dict(), os.path.join(artifacts_dir, "site_facts.json"))
     json_dump_stable(
