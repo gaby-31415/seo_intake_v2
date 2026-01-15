@@ -58,7 +58,7 @@ def extract_locations(html_files: List[bytes]) -> List[Dict[str, Any]]:
 
     locations: List[Dict[str, Any]] = []
     for html in html_files:
-        soup = BeautifulSoup(html, "lxml")
+        soup = BeautifulSoup(html, "html.parser")
         for name_span in soup.select("span.location-name"):
             container = name_span.find_parent()
             address_lines = []
