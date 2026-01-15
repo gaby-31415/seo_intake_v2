@@ -47,7 +47,7 @@ def _ensure_artifacts_dir(out_dir: str) -> str:
 def run_pipeline(sitemap_xml: bytes, html_files: List[bytes], out_dir: str) -> str:
     """Run the SEO intake pipeline and return the artifacts directory."""
 
-    urls = parse_sitemap(sitemap_xml)
+    urls, excluded_urls = parse_sitemap(sitemap_xml)
     item_urls, non_item_urls = split_item_urls(urls)
     core_pages = _stable_core_pages(rank_core_pages(non_item_urls))
     locations = extract_locations(html_files)
@@ -56,7 +56,12 @@ def run_pipeline(sitemap_xml: bytes, html_files: List[bytes], out_dir: str) -> s
     artifacts_dir = _ensure_artifacts_dir(out_dir)
 
     site_facts = SiteFacts()
-    core_pages_schema = CorePages(urls=core_pages)
+    core_pages_schema = CorePages(
+        urls=core_pages,
+        excluded=[
+            {"url": url, "reasons": ["exclude:malformed_url"]} for url in excluded_urls
+        ],
+    )
     locations_schema = Locations(locations=locations)
     dish_schema = DishTaxonomy(dishes=dish_taxonomy)
     ahrefs_schema = AhrefsSummary()

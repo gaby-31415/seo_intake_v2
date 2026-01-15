@@ -36,6 +36,7 @@ class CorePages:
     """Core page URLs identified from the sitemap."""
 
     urls: List[Dict[str, Any]] = field(default_factory=list)
+    excluded: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a JSON-serializable dict."""

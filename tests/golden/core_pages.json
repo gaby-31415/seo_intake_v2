@@ -1,4 +1,12 @@
 {
+  "excluded": [
+    {
+      "reasons": [
+        "exclude:malformed_url"
+      ],
+      "url": "https://www.stanleys-tavern.com/https/yelp-to/t2-jivmlru"
+    }
+  ],
   "urls": [
     {
       "label": "Other",
