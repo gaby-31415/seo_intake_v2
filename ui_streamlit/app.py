@@ -140,6 +140,23 @@ if artifacts_dir:
     with st.expander("Locations", expanded=False):
         locations = locations_data.get("locations", [])
         if locations:
+            summary_lines = []
+            for location in locations:
+                location_name = location.get("location_name") or location.get("name", "")
+                address = (
+                    location.get("full_address")
+                    or location.get("city_state_zip")
+                    or location.get("street")
+                    or ""
+                )
+                if location_name and address:
+                    summary_lines.append(f"- **{location_name}**: {address}")
+                elif location_name:
+                    summary_lines.append(f"- **{location_name}**")
+                elif address:
+                    summary_lines.append(f"- {address}")
+            if summary_lines:
+                st.markdown("\n".join(summary_lines))
             st.json(locations)
         else:
             st.info("No locations found.")

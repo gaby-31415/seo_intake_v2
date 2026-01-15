@@ -12,6 +12,18 @@ def _clean_text(text: str | None) -> str:
     return "" if text is None else " ".join(text.split())
 
 
+def _normalize_space(text: str) -> str:
+    return " ".join(text.split())
+
+
+def _normalize_phone_digits(phone: str) -> str:
+    return re.sub(r"\D", "", phone)
+
+
+def _normalize_email(email: str) -> str:
+    return _normalize_space(email).lower()
+
+
 def _parse_city_state_zip(text: str) -> Tuple[str, str, str]:
     cleaned = _clean_text(text)
     match = re.match(
@@ -32,6 +44,8 @@ def _find_city_state_zip(address_lines: List[str]) -> Tuple[str, str, str, str]:
         city, region, postal = _parse_city_state_zip(line)
         if city and region and postal:
             return line, city, region, postal
+    if address_lines:
+        return address_lines[-1], "", "", ""
     return "", "", "", ""
 
 
@@ -57,6 +71,7 @@ def extract_locations(html_files: List[bytes]) -> List[Dict[str, Any]]:
     """
 
     locations: List[Dict[str, Any]] = []
+    seen_keys: set[Tuple[str, ...]] = set()
     for html in html_files:
         soup = BeautifulSoup(html, "html.parser")
         for name_span in soup.select("span.location-name"):
@@ -77,16 +92,31 @@ def extract_locations(html_files: List[bytes]) -> List[Dict[str, Any]]:
             phone = _clean_text(tel_link.get_text()) if tel_link else ""
             email = ""
             if mail_link and mail_link.get("href"):
-                email = mail_link["href"].replace("mailto:", "")
+                email = _clean_text(mail_link["href"].replace("mailto:", ""))
             street = address_lines[0] if address_lines else ""
             city_state_zip, city, region, postal = _find_city_state_zip(address_lines)
             full_address = ""
-            if street and city and region and postal:
-                full_address = f"{street}, {city}, {region} {postal}"
+            if street and city_state_zip:
+                if city and region and postal:
+                    full_address = f"{street}, {city}, {region} {postal}"
+                else:
+                    full_address = f"{street}, {city_state_zip}"
+            location_name = _clean_text(name_span.get_text())
+            normalized_street = _normalize_space(street)
+            normalized_city_state_zip = _normalize_space(city_state_zip)
+            normalized_phone = _normalize_phone_digits(phone)
+            normalized_email = _normalize_email(email)
+            if normalized_street and normalized_city_state_zip:
+                key = (normalized_street, normalized_city_state_zip, normalized_phone, normalized_email)
+            else:
+                key = (location_name, normalized_phone, normalized_email)
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
             locations.append(
                 {
-                    "name": _clean_text(name_span.get_text()),
-                    "address": address_lines,
+                    "location_name": location_name,
+                    "street": street,
                     "city_state_zip": city_state_zip,
                     "city": city,
                     "region": region,

@@ -1,20 +1,16 @@
 {
   "locations": [
     {
-      "address": [
-        "123 Main St.",
-        "Suite 100",
-        "Metropolis, NY 10001"
-      ],
       "city": "Metropolis",
       "city_state_zip": "Metropolis, NY 10001",
       "confidence": "high",
       "email": "downtown@example.com",
       "full_address": "123 Main St., Metropolis, NY 10001",
-      "name": "Downtown",
+      "location_name": "Downtown",
       "phone": "(123) 456-7890",
       "postal": "10001",
-      "region": "NY"
+      "region": "NY",
+      "street": "123 Main St."
     }
   ]
 }
